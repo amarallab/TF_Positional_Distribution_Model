@@ -6,6 +6,9 @@ from pyensembl import EnsemblRelease
 
 # release 77 uses human reference genome GRCh38
 data = EnsemblRelease(77)
+#Get list of gene IDs
+id_all = data.gene_ids()
+
 
 #Set working directory
 working_dir ="/projects/b1042/AmaralLab/Maalavika/TF_Positional_Distribution_Model/data/ENCODE/A549_Perturbation/RNA-seq"

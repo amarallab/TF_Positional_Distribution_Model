@@ -3,9 +3,10 @@ import os
 import pandas as pd
 import numpy as np
 from pyensembl import EnsemblRelease
+from utils import *
 
 #Set working directory
-working_dir ="TF_Positional_Distribution_Model/data/ENCODE/RNAPol_Occupancy"
+working_dir ="/projects/b1042/AmaralLab/Maalavika/TF_Positional_Distribution_Model/data/ENCODE/RNAPol_Occupancy"
 os.chdir(working_dir)
 
 #Reference genome
@@ -48,8 +49,11 @@ df['min_dist'] = df.apply(lambda x: abs(sum([x['start_diff'], x['end_diff']])/2)
 params = pd.read_csv('../processed/ExpDecayConst_params.csv',index_col =0)
 params = params.loc[(params.CellLine=="A549") &
                    (params.TF == "MYC")]
-tau = params.tau.values[0]
-df['Threshold'] = df.min_dist <= -np.log(0.05)*tau
+
+#Calculate threshold within which true binding to spurious binding ratio is 10. 
+t = n_max_true(params.rb.values[0], params.tau.values[0], params.rs.values[0], [0.1]).Distance
+
+df['Threshold'] = df.min_dist <= t.values[0]
 
 #Classify true and  spurious edges
 classified_gene_list = df.groupby('Gene')['Threshold'].any().reset_index(name='present')
@@ -57,5 +61,5 @@ true_edges = ref.loc[ref.Gene.isin(classified_gene_list.Gene.loc[classified_gene
 false_edges = ref.loc[ref.Gene.isin(classified_gene_list.Gene.loc[~classified_gene_list.present])]
 
 #Save reference files for true and spurious edges
-true_edges.to_csv('True_TSS_TES_MYC.bed', sep = '\t', index = False, header = False)
-false_edges.to_csv('Spurious_TSS_TES_MYC.bed', sep = '\t', index = False, header = False)
+true_edges.to_csv('True_TSS_TES.bed', sep = '\t', index = False, header = False)
+false_edges.to_csv('Spurious_TSS_TES.bed', sep = '\t', index = False, header = False)

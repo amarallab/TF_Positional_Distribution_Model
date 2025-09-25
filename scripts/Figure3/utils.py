@@ -115,3 +115,38 @@ def true_spur_ratio(x,rb,tau,rs):
 
 
 
+def n_max_true(rb,tau,rs, thresholds):
+    
+    '''
+    
+    This function estimates the distance from TSS at which the ratio of 
+    spurious binding events to biologically relevant TF binding events in a genome 
+    is equal to a specific threshold level.
+    
+    INPUT: 
+    rb: Scaling factor for biologically relevant binding for a TF.
+    tau: Exponential decay rate of biologically relvant binding with distance from
+    TSS for a TF.
+    rs: Spurious binding rate for a TF.
+    threshold: list of threshold values for ratio of spurious to biologically relevant
+    binding events
+    
+    OUTPUT: 
+    pd.DataFrame(), correponding to  distance from TSS at which the ratio of 
+    spurious binding events to biologically relevant TF binding events in a genome 
+    is equal to a specific threshold (alpha) level.
+
+
+
+    '''
+
+    values = []
+    for threshold in thresholds:
+        y = [true_spur_ratio(i,rb,tau,rs) for i in np.linspace(1,10000,10000)]
+        y_thresh = [idx+1 for idx,i in enumerate(y) if i <= threshold]
+        if y_thresh:
+            values.append([max(y_thresh), y[max(y_thresh)-1]])
+        else:
+            values.append([np.argmin(y)+1,min(y)])
+
+    return pd.DataFrame(values, columns =['Distance','Alpha'])
