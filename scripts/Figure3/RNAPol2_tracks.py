@@ -6,7 +6,7 @@ from pyensembl import EnsemblRelease
 from utils import *
 
 #Set working directory
-working_dir ="/projects/b1042/AmaralLab/Maalavika/TF_Positional_Distribution_Model/data/ENCODE/RNAPol_Occupancy"
+working_dir ="TF_Positional_Distribution_Model/data/ENCODE/RNAPol_Occupancy"
 os.chdir(working_dir)
 
 #Reference genome
@@ -54,7 +54,7 @@ params = params.loc[(params.CellLine=="A549") &
 t = n_max_true(params.rb.values[0], params.tau.values[0], params.rs.values[0], [0.1]).Distance
 
 df['Threshold'] = df.min_dist <= t.values[0]
-
+df['Threshold_2kb'] = df.min_dist <= 2000
 #Classify true and  spurious edges
 classified_gene_list = df.groupby('Gene')['Threshold'].any().reset_index(name='present')
 true_edges = ref.loc[ref.Gene.isin(classified_gene_list.Gene.loc[classified_gene_list.present])]
@@ -63,3 +63,14 @@ false_edges = ref.loc[ref.Gene.isin(classified_gene_list.Gene.loc[~classified_ge
 #Save reference files for true and spurious edges
 true_edges.to_csv('True_TSS_TES.bed', sep = '\t', index = False, header = False)
 false_edges.to_csv('Spurious_TSS_TES.bed', sep = '\t', index = False, header = False)
+
+#Identify spurious edges less than 2kb
+missing_genes = df.loc[~df.Threshold & df.Threshold_2kb].Gene.unqiue() ## 426 genes
+missing_le2kb = false_edges.loc[false_edges.Gene.isin(missing_genes)]
+missing_le2kb.to_csv('Missing_le2kb.bed', index = None, header = None, sep = '\t' )
+
+
+#Sample 426 biologically relevant and spurious interactions
+true_edges.sample(missing_le2kb.shape[0]).to_csv('True_sampled.bed', index = None, header = None, sep = '\t' )
+spurious_ge_2kb = false_edges.loc[~false_edges.Gene.isin(missing_genes)]
+spurious_ge_2kb.sample(missing_le2kb.shape[0]).to_csv('Spurious_sampled.bed', index = None, header = None, sep = '\t' )
